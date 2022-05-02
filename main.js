@@ -55,6 +55,9 @@ const callRoomButton = document.getElementById('callRoomButton');
 const menuSelect = document.getElementById('menu');
 menuSelect.disabled = true;
 
+const roomIdInput = document.getElementById('roomId');
+const callIdInput = document.getElementById('callId');
+
 const answerButton = document.getElementById('answerButton');
 const remoteVideo = document.getElementById('remoteVideo');
 const remoteVideo2 = document.getElementById('remoteVideo2');
@@ -137,8 +140,8 @@ callButton.onclick = async () => {
   const callDoc = roomDoc.collection('calls').doc();
   const offerCandidates = callDoc.collection('offerCandidates');
   const answerCandidates = callDoc.collection('answerCandidates');
-  roomInput.value = roomDoc.id;
-  callInput.value = callDoc.id;
+  roomIdInput.value = roomDoc.id;
+  callIdInput.value = callDoc.id;
   if (!connectionId) {
     connectionId = callDoc.id;
   }
@@ -189,11 +192,14 @@ callButton.onclick = async () => {
 callRoomButton.onclick = async () => {
   // Reference Firestore collections for signaling
   const callRoomId = callRoomInput.value;
+  roomIdInput.value = callRoomId;
   const roomDoc = firestore.collection('rooms').doc(callRoomId);
   const callDoc = roomDoc.collection('calls').doc();
   const offerCandidates = callDoc.collection('offerCandidates');
   const answerCandidates = callDoc.collection('answerCandidates');
   callInput.value = callDoc.id;
+  callIdInput.value = callDoc.id;
+
   if (!connectionId) {
     connectionId = callDoc.id;
   }
