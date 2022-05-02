@@ -53,3 +53,19 @@ video {
 .section input {
   margin: 10px 2px;
 }
+
+#newRoomCall {
+  display: none;
+}
+
+#joinCall {
+  display: none;
+}
+
+#callButton {
+  margin-top: 1rem;
+}
+
+#menu {
+  margin: 1rem 0;
+}

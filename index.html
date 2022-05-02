@@ -6,6 +6,20 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WebRTC Demo</title>
+  <script>
+    function showDiv() {
+      const divs = ["newCall", "newRoomCall", "joinCall"]
+      const value = document.getElementById("menu").value;
+      console.log(value)
+
+      document.getElementById(value).style.display = 'block';
+      const displaynoneElements = divs.filter(div => div !== value);
+      console.log(displaynoneElements)
+      displaynoneElements.forEach(div => {
+        document.getElementById(div).style.display = 'none';
+      });
+    }
+  </script>
 </head>
 
 <body>
@@ -33,18 +47,27 @@
   </div>
 
   <button id="webcamButton">Start webcam</button>
-  <h2>2. Create a new Call</h2>
-  <button id="callButton" disabled>Create Call (offer)</button>
 
-  <h2>OR Create a Call to join a room</h2>
   <div class="section">
+    <select name="menu" id="menu" onchange="showDiv()">
+      <option value="newCall">Create a new Call</option>
+      <option value="newRoomCall">Create a Call with room Id</option>
+      <option value="joinCall">Answer a Call with room Id and call Id </option>
+    </select>
+  </div>
+
+  <div class="section" id="newCall">
+    <button id="callButton" disabled>Create Call (offer)</button>
+  </div>
+
+
+  <div class="section" id="newRoomCall">
     <label for="callRoomInput">Room Id</label>
     <input id="callRoomInput" />
     <button id="callRoomButton" disabled>Create Call (room offer)</button>
   </div>
 
-  <h2>3. Join a Call</h2>
-  <div class="section">
+  <div class="section" id="joinCall">
     <p>Answer the call from a different browser window or device</p>
     <label for="roomInput">Room Id</label>
     <input id="roomInput" />

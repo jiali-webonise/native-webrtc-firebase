@@ -52,6 +52,8 @@ const webcamVideo = document.getElementById('webcamVideo');
 const callButton = document.getElementById('callButton');
 const callInput = document.getElementById('callInput');
 const callRoomButton = document.getElementById('callRoomButton');
+const menuSelect = document.getElementById('menu');
+menuSelect.disabled = true;
 
 const answerButton = document.getElementById('answerButton');
 const remoteVideo = document.getElementById('remoteVideo');
@@ -124,6 +126,7 @@ webcamButton.onclick = async () => {
   callRoomButton.disabled = false;
   answerButton.disabled = false;
   webcamButton.disabled = true;
+  menuSelect.disabled = false;
 };
 
 // 2. Create an offer
