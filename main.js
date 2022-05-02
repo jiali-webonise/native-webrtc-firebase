@@ -32,6 +32,8 @@ const servers = {
 const pc = new RTCPeerConnection(servers);
 let localStream = null;
 let remoteStream = null;
+let myAudio = null;
+let remoteAudio = null;
 
 // HTML elements
 const webcamButton = document.getElementById('webcamButton');
@@ -42,6 +44,11 @@ const answerButton = document.getElementById('answerButton');
 const remoteVideo = document.getElementById('remoteVideo');
 const hangupButton = document.getElementById('hangupButton');
 
+const myAudioButton = document.getElementById('myAudioButton');
+const remoteAudioButton = document.getElementById('remoteAudioButton');
+myAudioButton.disabled = true;
+remoteAudioButton.disabled = true;
+
 // 1. Setup media sources
 
 webcamButton.onclick = async () => {
@@ -51,12 +58,20 @@ webcamButton.onclick = async () => {
   // Push tracks from local stream to peer connection
   localStream.getTracks().forEach((track) => {
     pc.addTrack(track, localStream);
+    if (track.kind === 'audio') {
+      myAudio = track;
+      myAudioButton.disabled = false;
+    }
   });
 
   // Pull tracks from remote stream, add to video stream
   pc.ontrack = (event) => {
     event.streams[0].getTracks().forEach((track) => {
       remoteStream.addTrack(track);
+      if (track.kind === 'audio') {
+        remoteAudio = track;
+        remoteAudioButton.disabled = false;
+      }
     });
   };
 
@@ -151,3 +166,22 @@ answerButton.onclick = async () => {
     });
   });
 };
+
+myAudioButton.onclick = async () => {
+  myAudio.enabled = !myAudio.enabled;
+  if (myAudio.enabled) {
+    myAudioButton.textContent = 'Unmuted';
+  } else {
+    myAudioButton.textContent = 'Muted'
+  }
+}
+
+remoteAudioButton.onclick = async () => {
+  remoteAudio.enabled = !remoteAudio.enabled;
+  remoteAudio.enabled ? remoteAudioButton.value = 'Unmuted' : remoteAudioButton.value = 'Muted'
+  if (remoteAudio.enabled) {
+    remoteAudioButton.textContent = 'Unmuted';
+  } else {
+    remoteAudioButton.textContent = 'Muted'
+  }
+}
