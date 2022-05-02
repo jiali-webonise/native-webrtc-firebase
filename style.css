@@ -30,7 +30,26 @@ video {
   justify-content: center;
 }
 
+.remoteVideos {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .audioBtn {
   width: 40vw;
   margin: 1rem 2rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 10vw;
+  margin-right: 10vw;
+  text-align: left;
+}
+
+.section input {
+  margin: 10px 2px;
 }

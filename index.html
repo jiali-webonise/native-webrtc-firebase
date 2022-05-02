@@ -16,10 +16,17 @@
       <video id="webcamVideo" autoplay playsinline></video>
       <button type="button" class="audioBtn" id="myAudioButton">Unmuted</button>
     </div>
-    <div class="subVideo">
-      <h3>Remote Stream</h3>
-      <video id="remoteVideo" autoplay playsinline></video>
-      <button type="button" class="audioBtn" id="remoteAudioButton">Unmuted</button>
+    <div class="remoteVideos">
+      <div class="subVideo">
+        <h3>Remote Stream</h3>
+        <video id="remoteVideo" autoplay playsinline></video>
+        <button type="button" class="audioBtn" id="remoteAudioButton">Unmuted</button>
+      </div>
+      <div class="subVideo">
+        <h3>Remote Stream2</h3>
+        <video id="remoteVideo2" autoplay playsinline></video>
+        <button type="button" class="audioBtn" id="remoteAudioButton2">Unmuted</button>
+      </div>
     </div>
 
 
@@ -29,11 +36,23 @@
   <h2>2. Create a new Call</h2>
   <button id="callButton" disabled>Create Call (offer)</button>
 
-  <h2>3. Join a Call</h2>
-  <p>Answer the call from a different browser window or device</p>
+  <h2>OR Create a Call to join a room</h2>
+  <div class="section">
+    <label for="callRoomInput">Room Id</label>
+    <input id="callRoomInput" />
+    <button id="callRoomButton" disabled>Create Call (room offer)</button>
+  </div>
 
-  <input id="callInput" />
-  <button id="answerButton" disabled>Answer</button>
+  <h2>3. Join a Call</h2>
+  <div class="section">
+    <p>Answer the call from a different browser window or device</p>
+    <label for="roomInput">Room Id</label>
+    <input id="roomInput" />
+    <label for="callInput">Call Id</label>
+    <input id="callInput" />
+
+    <button id="answerButton" disabled>Answer</button>
+  </div>
 
   <h2>4. Update audio</h2>
   <button id="updateAudioButton" disabled>Update Audio</button>
