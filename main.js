@@ -3,6 +3,11 @@ import './style.css';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
+const ROLE = {
+  CALLER: "caller",//a caller creates an offer
+  RECEIVER: "receiver"//a receiver creates an answer
+}
+
 const firebaseConfig = {
   // your config
   apiKey: "AIzaSyC8MXXzAuAZJlHZSZpL9gvtgArXzwMp1cg",
@@ -34,6 +39,8 @@ let localStream = null;
 let remoteStream = null;
 let myAudio = null;
 let remoteAudio = null;
+let connectionId = null;
+let role = null;
 
 // HTML elements
 const webcamButton = document.getElementById('webcamButton');
@@ -43,6 +50,7 @@ const callInput = document.getElementById('callInput');
 const answerButton = document.getElementById('answerButton');
 const remoteVideo = document.getElementById('remoteVideo');
 const hangupButton = document.getElementById('hangupButton');
+const updateAudioStatusBtn = document.getElementById('updateAudioButton');
 
 const myAudioButton = document.getElementById('myAudioButton');
 const remoteAudioButton = document.getElementById('remoteAudioButton');
@@ -91,7 +99,9 @@ callButton.onclick = async () => {
   const answerCandidates = callDoc.collection('answerCandidates');
 
   callInput.value = callDoc.id;
-
+  if (!connectionId) {
+    connectionId = callDoc.id;
+  }
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
     event.candidate && offerCandidates.add(event.candidate.toJSON());
@@ -108,6 +118,11 @@ callButton.onclick = async () => {
 
   await callDoc.set({ offer });
 
+  const offerAudioEnabled = { offerAudioEnabled: myAudio.enabled };
+  await callDoc.update(offerAudioEnabled);
+  if (!role) {
+    role = ROLE.CALLER;
+  }
   // Listen for remote answer
   callDoc.onSnapshot((snapshot) => {
     const data = snapshot.data();
@@ -126,13 +141,16 @@ callButton.onclick = async () => {
       }
     });
   });
-
+  updateAudioStatusBtn.disabled = false;
   hangupButton.disabled = false;
 };
 
 // 3. Answer the call with the unique ID
 answerButton.onclick = async () => {
   const callId = callInput.value;
+  if (!connectionId) {
+    connectionId = callId;
+  }
   const callDoc = firestore.collection('calls').doc(callId);
   const answerCandidates = callDoc.collection('answerCandidates');
   const offerCandidates = callDoc.collection('offerCandidates');
@@ -156,6 +174,13 @@ answerButton.onclick = async () => {
 
   await callDoc.update({ answer });
 
+  const answerAudioEnabled = { answerAudioEnabled: myAudio.enabled }
+  await callDoc.update(answerAudioEnabled);
+
+  if (!role) {
+    role = ROLE.RECEIVER;
+  }
+
   offerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
       console.log(change);
@@ -165,6 +190,7 @@ answerButton.onclick = async () => {
       }
     });
   });
+  updateAudioStatusBtn.disabled = false;
 };
 
 myAudioButton.onclick = async () => {
@@ -173,6 +199,18 @@ myAudioButton.onclick = async () => {
     myAudioButton.textContent = 'Unmuted';
   } else {
     myAudioButton.textContent = 'Muted'
+  }
+  if (connectionId) {
+    const callDoc = firestore.collection('calls').doc(connectionId);
+    if (role === ROLE.CALLER) {
+      const offerAudioEnabled = { offerAudioEnabled: myAudio.enabled };
+      await callDoc.update(offerAudioEnabled);
+    }
+
+    if (role === ROLE.RECEIVER) {
+      const answerAudioEnabled = { answerAudioEnabled: myAudio.enabled };
+      await callDoc.update(answerAudioEnabled);
+    }
   }
 }
 
@@ -184,4 +222,64 @@ remoteAudioButton.onclick = async () => {
   } else {
     remoteAudioButton.textContent = 'Muted'
   }
+  if (connectionId) {
+    const callDoc = firestore.collection('calls').doc(connectionId);
+    if (role === ROLE.CALLER) {
+      const offerAudioEnabled = { answerAudioEnabled: remoteAudio.enabled };
+      await callDoc.update(offerAudioEnabled);
+    }
+
+    if (role === ROLE.RECEIVER) {
+      const answerAudioEnabled = { offerAudioEnabled: remoteAudio.enabled };
+      await callDoc.update(answerAudioEnabled);
+    }
+  }
+
+}
+
+updateAudioStatusBtn.onclick = async () => {
+  const callDoc = firestore.collection('calls').doc(connectionId);
+
+  callDoc.onSnapshot((snapshot) => {
+    const data = snapshot.data();
+    console.log("snapshot", snapshot);
+    console.log("snapshotdata", data);
+    console.log("role", role);
+    //Listen for audio changes and update button text context accroding to db
+    if (role && role === ROLE.RECEIVER) {
+      myAudio.enabled = data.answerAudioEnabled;
+      console.log("myAudio.enabled", myAudio.enabled)
+      if (myAudio.enabled) {
+        myAudioButton.textContent = 'Unmuted';
+      } else {
+        myAudioButton.textContent = 'Muted'
+      }
+
+      remoteAudio.enabled = data.offerAudioEnabled;
+      console.log("remoteAudio.enabled", remoteAudio.enabled)
+      if (remoteAudio.enabled) {
+        remoteAudioButton.textContent = 'Unmuted';
+      } else {
+        remoteAudioButton.textContent = 'Muted'
+      }
+    }
+
+    if (role && role === ROLE.CALLER) {
+      myAudio.enabled = data.offerAudioEnabled;
+      console.log("myAudio.enabled", myAudio.enabled)
+      if (myAudio.enabled) {
+        myAudioButton.textContent = 'Unmuted';
+      } else {
+        myAudioButton.textContent = 'Muted'
+      }
+
+      remoteAudio.enabled = data.answerAudioEnabled;
+      console.log("remoteAudio.enabled", remoteAudio.enabled)
+      if (remoteAudio.enabled) {
+        remoteAudioButton.textContent = 'Unmuted';
+      } else {
+        remoteAudioButton.textContent = 'Muted'
+      }
+    }
+  });
 }
