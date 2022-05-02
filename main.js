@@ -288,6 +288,8 @@ const answerUpdate = async (pc, callDoc, answerCandidates, offerCandidates) => {
 answerButton.onclick = async () => {
   const callId = callInput.value;
   const roomId = roomInput.value;
+  roomIdInput.value = roomId;
+  callIdInput.value = callId;
   if (!connectionId) {
     connectionId = callId;
   }
