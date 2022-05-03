@@ -20,4 +20,63 @@ video {
   display: flex;
   align-items: center;
   justify-content: center;
+  display: flex;
+  flex-direction: row;
+}
+
+.subVideo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.remoteVideos {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.audioBtn {
+  width: 40vw;
+  margin: 1rem 2rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 10vw;
+  margin-right: 10vw;
+  text-align: left;
+}
+
+.section input {
+  margin: 10px 2px;
+}
+
+#newRoomCall {
+  display: none;
+}
+
+#joinCall {
+  display: none;
+}
+
+#callButton {
+  margin-top: 1rem;
+}
+
+#menu {
+  margin: 1rem 0;
+}
+
+.audioId {
+  text-align: start;
+  width: 40vw;
+  margin: 0.2rem 2rem;
+}
+
+h3 {
+  margin: 0;
+  margin-top: 2rem;
 }

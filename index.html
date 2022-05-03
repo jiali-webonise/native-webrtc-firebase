@@ -1,41 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebRTC Demo</title>
-  </head>
-  <body>
-    <h2>1. Start your Webcam</h2>
-    <div class="videos">
-      <span>
-        <h3>Local Stream</h3>
-        <video id="webcamVideo" autoplay playsinline></video>
-      </span>
-      <span>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebRTC Demo</title>
+  <script>
+    function showDiv() {
+      const divs = ["newCall", "newRoomCall", "joinCall"]
+      const value = document.getElementById("menu").value;
+      // console.log(value)
+
+      document.getElementById(value).style.display = 'block';
+      const displaynoneElements = divs.filter(div => div !== value);
+      console.log(displaynoneElements)
+      displaynoneElements.forEach(div => {
+        document.getElementById(div).style.display = 'none';
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <h2>1. Start your Webcam</h2>
+  <div class="videos">
+    <div class="subVideo">
+      <h3>Local Stream</h3>
+      <video id="webcamVideo" autoplay playsinline muted></video>
+      <label for="myAudioId" class="audioId">Audio Id</label>
+      <input type="text" class="audioId" disabled id="myAudioId" />
+      <button type="button" class="audioBtn" id="myAudioButton">Audio On</button>
+    </div>
+    <div class="remoteVideos">
+      <div class="subVideo">
         <h3>Remote Stream</h3>
         <video id="remoteVideo" autoplay playsinline></video>
-      </span>
-
-
+        <label for="remoteAudioId" class="audioId">Audio Id</label>
+        <input type="text" class="audioId" disabled id="remoteAudioId" />
+        <button type="button" class="audioBtn" id="remoteAudioButton">Audio On</button>
+      </div>
+      <div class="subVideo">
+        <h3>Remote Stream2</h3>
+        <video id="remoteVideo2" autoplay playsinline></video>
+        <label for="remoteAudioId2" class="audioId">Audio Id</label>
+        <input type="text" class="audioId" disabled id="remoteAudioId2" />
+        <button type="button" class="audioBtn" id="remoteAudioButton2">Audio On</button>
+      </div>
     </div>
 
-    <button id="webcamButton">Start webcam</button>
-    <h2>2. Create a new Call</h2>
+
+  </div>
+
+  <button id="webcamButton">Start webcam</button>
+
+  <div class="section">
+    <p>Room Id:</p>
+    <input id="roomId" disabled />
+    <p>Call Id:</p>
+    <input id="callId" disabled />
+  </div>
+
+  <div class="section">
+    <select name="menu" id="menu" onchange="showDiv()">
+      <option value="newCall">Create a new Call</option>
+      <option value="newRoomCall">Create a Call with room Id</option>
+      <option value="joinCall">Answer a Call with room Id and call Id </option>
+    </select>
+  </div>
+
+  <div class="section" id="newCall">
     <button id="callButton" disabled>Create Call (offer)</button>
+  </div>
 
-    <h2>3. Join a Call</h2>
+
+  <div class="section" id="newRoomCall">
+    <label for="callRoomInput">Room Id</label>
+    <input id="callRoomInput" />
+    <button id="callRoomButton" disabled>Create Call (room offer)</button>
+  </div>
+
+  <div class="section" id="joinCall">
     <p>Answer the call from a different browser window or device</p>
-    
+    <label for="roomInput">Room Id</label>
+    <input id="roomInput" />
+    <label for="callInput">Call Id</label>
     <input id="callInput" />
+
     <button id="answerButton" disabled>Answer</button>
+  </div>
 
-    <h2>4. Hangup</h2>
+  <h2>4. Update audio</h2>
+  <button id="updateAudioButton" disabled>Update Audio</button>
 
-    <button id="hangupButton" disabled>Hangup</button>
+  <h2>5. Hangup</h2>
 
-    <script type="module" src="/main.js"></script>
+  <button id="hangupButton" disabled>Hangup</button>
 
-  </body>
+  <script type="module" src="/main.js"></script>
+
+</body>
+
 </html>
