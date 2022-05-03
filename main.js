@@ -36,6 +36,7 @@ const servers = {
 // Global State
 const pc = new RTCPeerConnection(servers);
 const peers = [];
+const map = new Map();
 peers.push(pc);
 let localStream = null;
 let remoteStream = null;
@@ -43,7 +44,7 @@ let remoteStream2 = null;
 let myAudio = null;
 let remoteAudio = null;
 let remoteAudio2 = null;
-let connectionId = null;
+const connectionIds = [];
 let role = null;
 
 // HTML elements
@@ -56,6 +57,7 @@ const menuSelect = document.getElementById('menu');
 menuSelect.disabled = true;
 
 const roomIdInput = document.getElementById('roomId');
+const roomInput = document.getElementById('roomInput');
 const callIdInput = document.getElementById('callId');
 
 const answerButton = document.getElementById('answerButton');
@@ -91,6 +93,7 @@ const anotherAnswer = async () => {
       if (track.kind === 'audio') {
         remoteAudio2 = track;
         remoteAudioButton2.disabled = false;
+        map.set(remoteAudio2.id, remoteAudio2);
       }
     });
   };
@@ -118,6 +121,7 @@ webcamButton.onclick = async () => {
       if (track.kind === 'audio') {
         remoteAudio = track;
         remoteAudioButton.disabled = false;
+        map.set(remoteAudio.id, remoteAudio)
       }
     });
   };
@@ -142,9 +146,10 @@ callButton.onclick = async () => {
   const answerCandidates = callDoc.collection('answerCandidates');
   roomIdInput.value = roomDoc.id;
   callIdInput.value = callDoc.id;
-  if (!connectionId) {
-    connectionId = callDoc.id;
-  }
+  map.set(callDoc.id, roomDoc.id);
+  console.log('map', map)
+  connectionIds.push(callDoc.id);
+
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
     event.candidate && offerCandidates.add(event.candidate.toJSON());
@@ -199,10 +204,10 @@ callRoomButton.onclick = async () => {
   const answerCandidates = callDoc.collection('answerCandidates');
   callInput.value = callDoc.id;
   callIdInput.value = callDoc.id;
+  map.set(callDoc.id, callRoomId);
+  console.log('map', map)
+  connectionIds.push(callDoc.id);
 
-  if (!connectionId) {
-    connectionId = callDoc.id;
-  }
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
     event.candidate && offerCandidates.add(event.candidate.toJSON());
@@ -290,9 +295,9 @@ answerButton.onclick = async () => {
   const roomId = roomInput.value;
   roomIdInput.value = roomId;
   callIdInput.value = callId;
-  if (!connectionId) {
-    connectionId = callId;
-  }
+  connectionIds.push(callId);
+  map.set(callId, roomId);
+  connectionIds.push(callId);
   const roomDoc = firestore.collection('rooms').doc(roomId);
   const callDoc = roomDoc.collection('calls').doc(callId);
   const answerCandidates = callDoc.collection('answerCandidates');
@@ -314,79 +319,95 @@ myAudioButton.onclick = async () => {
   } else {
     myAudioButton.textContent = 'Muted'
   }
-  if (connectionId) {
-    const callDoc = firestore.collection('calls').doc(connectionId);
-    if (role === ROLE.CALLER) {
-      const offerAudioEnabled = { offerAudioEnabled: myAudio.enabled };
-      await callDoc.update(offerAudioEnabled);
-    }
+  if (connectionIds.length > 0) {
+    connectionIds.forEach(async connectionId => {
+      console.log('map', map);
+      const roomId = map.get(connectionId);
+      const roomDoc = firestore.collection('rooms').doc(roomId);
+      const callDoc = roomDoc.collection('calls').doc(connectionId);
+      console.log("roomid", roomId)
+      console.log("callId", connectionId);
+      if (role === ROLE.CALLER) {
+        const offerAudioEnabled = { offerAudioEnabled: myAudio.enabled };
+        await callDoc.update(offerAudioEnabled);
+      }
 
-    if (role === ROLE.RECEIVER) {
-      const answerAudioEnabled = { answerAudioEnabled: myAudio.enabled };
-      await callDoc.update(answerAudioEnabled);
-    }
+      if (role === ROLE.RECEIVER) {
+        const answerAudioEnabled = { answerAudioEnabled: myAudio.enabled };
+        await callDoc.update(answerAudioEnabled);
+      }
+    })
   }
 }
 
 remoteAudioButton.onclick = async () => {
   remoteAudio.enabled = !remoteAudio.enabled;
-  remoteAudio.enabled ? remoteAudioButton.value = 'Unmuted' : remoteAudioButton.value = 'Muted'
   if (remoteAudio.enabled) {
-    remoteAudioButton.textContent = 'Unmuted';
+    remoteAudio.textContent = 'Unmuted';
   } else {
-    remoteAudioButton.textContent = 'Muted'
+    remoteAudio.textContent = 'Muted'
   }
-  if (connectionId) {
-    const callDoc = firestore.collection('calls').doc(connectionId);
-    if (role === ROLE.CALLER) {
-      const offerAudioEnabled = { answerAudioEnabled: remoteAudio.enabled };
-      await callDoc.update(offerAudioEnabled);
-    }
+  console.log('map', map)
+  if (connectionIds.length > 0) {
+    connectionIds.forEach(async connectionId => {
+      const roomId = map.get(connectionId);
+      const roomDoc = firestore.collection('rooms').doc(roomId);
+      const callDoc = roomDoc.collection('calls').doc(connectionId);
+      if (role === ROLE.CALLER) {
+        const offerAudioEnabled = { answerAudioEnabled: remoteAudio.enabled };
+        await callDoc.update(offerAudioEnabled);
+      }
 
-    if (role === ROLE.RECEIVER) {
-      const answerAudioEnabled = { offerAudioEnabled: remoteAudio.enabled };
-      await callDoc.update(answerAudioEnabled);
-    }
+      if (role === ROLE.RECEIVER) {
+        const answerAudioEnabled = { offerAudioEnabled: remoteAudio.enabled };
+        await callDoc.update(answerAudioEnabled);
+      }
+    });
   }
 
 }
 
 updateAudioStatusBtn.onclick = async () => {
-  const callDoc = firestore.collection('calls').doc(connectionId);
+  connectionIds.forEach(connectionId => {
+    const roomId = map.get(connectionId);
+    const roomDoc = firestore.collection('rooms').doc(roomId);
+    const callDoc = roomDoc.collection('calls').doc(connectionId);
+    callDoc.onSnapshot((snapshot) => {
+      const data = snapshot.data();
+      //Listen for audio changes and update button text context accroding to db
+      if (role && role === ROLE.RECEIVER) {
+        myAudio.enabled = data.answerAudioEnabled;
+        if (myAudio.enabled) {
+          myAudioButton.textContent = 'Unmuted';
+        } else {
+          myAudioButton.textContent = 'Muted'
+        }
 
-  callDoc.onSnapshot((snapshot) => {
-    const data = snapshot.data();
-    //Listen for audio changes and update button text context accroding to db
-    if (role && role === ROLE.RECEIVER) {
-      myAudio.enabled = data.answerAudioEnabled;
-      if (myAudio.enabled) {
-        myAudioButton.textContent = 'Unmuted';
-      } else {
-        myAudioButton.textContent = 'Muted'
+        remoteAudio.enabled = data.offerAudioEnabled;
+        if (remoteAudio.enabled) {
+          remoteAudioButton.textContent = 'Unmuted';
+        } else {
+          remoteAudioButton.textContent = 'Muted'
+        }
       }
 
-      remoteAudio.enabled = data.offerAudioEnabled;
-      if (remoteAudio.enabled) {
-        remoteAudioButton.textContent = 'Unmuted';
-      } else {
-        remoteAudioButton.textContent = 'Muted'
-      }
-    }
+      if (role && role === ROLE.CALLER) {
+        myAudio.enabled = data.offerAudioEnabled;
+        if (myAudio.enabled) {
+          myAudioButton.textContent = 'Unmuted';
+        } else {
+          myAudioButton.textContent = 'Muted'
+        }
 
-    if (role && role === ROLE.CALLER) {
-      myAudio.enabled = data.offerAudioEnabled;
-      if (myAudio.enabled) {
-        myAudioButton.textContent = 'Unmuted';
-      } else {
-        myAudioButton.textContent = 'Muted'
+        remoteAudio.enabled = data.answerAudioEnabled;
+        if (remoteAudio.enabled) {
+          remoteAudioButton.textContent = 'Unmuted';
+        } else {
+          remoteAudioButton.textContent = 'Muted'
+        }
       }
+    });
 
-      remoteAudio.enabled = data.answerAudioEnabled;
-      if (remoteAudio.enabled) {
-        remoteAudioButton.textContent = 'Unmuted';
-      } else {
-        remoteAudioButton.textContent = 'Muted'
-      }
-    }
+
   });
 }
