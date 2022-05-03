@@ -69,3 +69,14 @@ video {
 #menu {
   margin: 1rem 0;
 }
+
+.audioId {
+  text-align: start;
+  width: 40vw;
+  margin: 0.2rem 2rem;
+}
+
+h3 {
+  margin: 0;
+  margin-top: 2rem;
+}

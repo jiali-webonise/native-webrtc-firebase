@@ -10,7 +10,7 @@
     function showDiv() {
       const divs = ["newCall", "newRoomCall", "joinCall"]
       const value = document.getElementById("menu").value;
-      console.log(value)
+      // console.log(value)
 
       document.getElementById(value).style.display = 'block';
       const displaynoneElements = divs.filter(div => div !== value);
@@ -28,18 +28,24 @@
     <div class="subVideo">
       <h3>Local Stream</h3>
       <video id="webcamVideo" autoplay playsinline muted></video>
-      <button type="button" class="audioBtn" id="myAudioButton">Unmuted</button>
+      <label for="myAudioId" class="audioId">Audio Id</label>
+      <input type="text" class="audioId" disabled id="myAudioId" />
+      <button type="button" class="audioBtn" id="myAudioButton">Audio On</button>
     </div>
     <div class="remoteVideos">
       <div class="subVideo">
         <h3>Remote Stream</h3>
         <video id="remoteVideo" autoplay playsinline></video>
-        <button type="button" class="audioBtn" id="remoteAudioButton">Unmuted</button>
+        <label for="remoteAudioId" class="audioId">Audio Id</label>
+        <input type="text" class="audioId" disabled id="remoteAudioId" />
+        <button type="button" class="audioBtn" id="remoteAudioButton">Audio On</button>
       </div>
       <div class="subVideo">
         <h3>Remote Stream2</h3>
         <video id="remoteVideo2" autoplay playsinline></video>
-        <button type="button" class="audioBtn" id="remoteAudioButton2">Unmuted</button>
+        <label for="remoteAudioId2" class="audioId">Audio Id</label>
+        <input type="text" class="audioId" disabled id="remoteAudioId2" />
+        <button type="button" class="audioBtn" id="remoteAudioButton2">Audio On</button>
       </div>
     </div>
 

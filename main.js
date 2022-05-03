@@ -44,7 +44,7 @@ let remoteStream2 = null;
 let myAudio = null;
 let remoteAudio = null;
 let remoteAudio2 = null;
-const connectionIds = [];
+const connectionIds = new Set();
 let role = null;
 
 // HTML elements
@@ -73,6 +73,10 @@ myAudioButton.disabled = true;
 remoteAudioButton.disabled = true;
 remoteAudioButton2.disabled = true;
 
+const myAudioIdInput = document.getElementById('myAudioId');
+const remoteAudioIdInput = document.getElementById('remoteAudioId');
+const remoteAudioIdInput2 = document.getElementById('remoteAudioId2');
+
 //manger answer, patients call
 //Setup media sources for another rtc connection: multi-conn
 const anotherAnswer = async () => {
@@ -93,6 +97,7 @@ const anotherAnswer = async () => {
       if (track.kind === 'audio') {
         remoteAudio2 = track;
         remoteAudioButton2.disabled = false;
+        remoteAudioIdInput2.value = remoteAudio2.id;
         map.set(remoteAudio2.id, remoteAudio2);
       }
     });
@@ -110,8 +115,10 @@ webcamButton.onclick = async () => {
     pc.addTrack(track, localStream);
     if (track.kind === 'audio') {
       myAudio = track;
+      myAudioIdInput.value = myAudio.id
       myAudioButton.disabled = false;
     }
+    map.set(myAudio.id, myAudio);
   });
 
   // Pull tracks from remote stream, add to video stream
@@ -121,6 +128,7 @@ webcamButton.onclick = async () => {
       if (track.kind === 'audio') {
         remoteAudio = track;
         remoteAudioButton.disabled = false;
+        remoteAudioIdInput.value = remoteAudio.id;
         map.set(remoteAudio.id, remoteAudio)
       }
     });
@@ -148,7 +156,7 @@ callButton.onclick = async () => {
   callIdInput.value = callDoc.id;
   map.set(callDoc.id, roomDoc.id);
   console.log('map', map)
-  connectionIds.push(callDoc.id);
+  connectionIds.add(callDoc.id);
 
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
@@ -206,7 +214,7 @@ callRoomButton.onclick = async () => {
   callIdInput.value = callDoc.id;
   map.set(callDoc.id, callRoomId);
   console.log('map', map)
-  connectionIds.push(callDoc.id);
+  connectionIds.add(callDoc.id);
 
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
@@ -295,9 +303,12 @@ answerButton.onclick = async () => {
   const roomId = roomInput.value;
   roomIdInput.value = roomId;
   callIdInput.value = callId;
-  connectionIds.push(callId);
+  connectionIds.add(callId);
   map.set(callId, roomId);
-  connectionIds.push(callId);
+
+  console.log("map", map)
+  console.log("connectionIds", connectionIds)
+
   const roomDoc = firestore.collection('rooms').doc(roomId);
   const callDoc = roomDoc.collection('calls').doc(callId);
   const answerCandidates = callDoc.collection('answerCandidates');
@@ -315,13 +326,14 @@ answerButton.onclick = async () => {
 myAudioButton.onclick = async () => {
   myAudio.enabled = !myAudio.enabled;
   if (myAudio.enabled) {
-    myAudioButton.textContent = 'Unmuted';
+    myAudioButton.textContent = 'Audio On';
   } else {
-    myAudioButton.textContent = 'Muted'
+    myAudioButton.textContent = 'Audio Off'
   }
-  if (connectionIds.length > 0) {
+  console.log('map', map);
+  console.log('connectionIds', connectionIds);
+  if (connectionIds.size > 0) {
     connectionIds.forEach(async connectionId => {
-      console.log('map', map);
       const roomId = map.get(connectionId);
       const roomDoc = firestore.collection('rooms').doc(roomId);
       const callDoc = roomDoc.collection('calls').doc(connectionId);
@@ -341,14 +353,17 @@ myAudioButton.onclick = async () => {
 }
 
 remoteAudioButton.onclick = async () => {
+  console.log('remote audio', remoteAudio.enabled)
   remoteAudio.enabled = !remoteAudio.enabled;
+  console.log('remote audio after', remoteAudio.enabled)
   if (remoteAudio.enabled) {
-    remoteAudio.textContent = 'Unmuted';
+    remoteAudioButton.textContent = 'Audio On';
   } else {
-    remoteAudio.textContent = 'Muted'
+    remoteAudioButton.textContent = 'Audio Off'
   }
-  console.log('map', map)
-  if (connectionIds.length > 0) {
+  console.log('map', map);
+  console.log('connectionIds', connectionIds);
+  if (connectionIds.size > 0) {
     connectionIds.forEach(async connectionId => {
       const roomId = map.get(connectionId);
       const roomDoc = firestore.collection('rooms').doc(roomId);
@@ -364,7 +379,35 @@ remoteAudioButton.onclick = async () => {
       }
     });
   }
+}
 
+remoteAudioButton2.onclick = async () => {
+  console.log('remote audio', remoteAudio2.enabled)
+  remoteAudio2.enabled = !remoteAudio2.enabled;
+  console.log('remote audio after', remoteAudio2.enabled)
+  if (remoteAudio2.enabled) {
+    remoteAudioButton2.textContent = 'Audio On';
+  } else {
+    remoteAudioButton2.textContent = 'Audio Off'
+  }
+  console.log('map', map);
+  console.log('connectionIds', connectionIds);
+  if (connectionIds.size > 0) {
+    connectionIds.forEach(async connectionId => {
+      const roomId = map.get(connectionId);
+      const roomDoc = firestore.collection('rooms').doc(roomId);
+      const callDoc = roomDoc.collection('calls').doc(connectionId);
+      if (role === ROLE.CALLER) {
+        const offerAudioEnabled = { answerAudioEnabled: remoteAudio2.enabled };
+        await callDoc.update(offerAudioEnabled);
+      }
+
+      if (role === ROLE.RECEIVER) {
+        const answerAudioEnabled = { offerAudioEnabled: remoteAudio2.enabled };
+        await callDoc.update(answerAudioEnabled);
+      }
+    });
+  }
 }
 
 updateAudioStatusBtn.onclick = async () => {
@@ -378,32 +421,32 @@ updateAudioStatusBtn.onclick = async () => {
       if (role && role === ROLE.RECEIVER) {
         myAudio.enabled = data.answerAudioEnabled;
         if (myAudio.enabled) {
-          myAudioButton.textContent = 'Unmuted';
+          myAudioButton.textContent = 'Audio On';
         } else {
-          myAudioButton.textContent = 'Muted'
+          myAudioButton.textContent = 'Audio Off'
         }
 
         remoteAudio.enabled = data.offerAudioEnabled;
         if (remoteAudio.enabled) {
-          remoteAudioButton.textContent = 'Unmuted';
+          remoteAudioButton.textContent = 'Audio On';
         } else {
-          remoteAudioButton.textContent = 'Muted'
+          remoteAudioButton.textContent = 'Audio Off'
         }
       }
 
       if (role && role === ROLE.CALLER) {
         myAudio.enabled = data.offerAudioEnabled;
         if (myAudio.enabled) {
-          myAudioButton.textContent = 'Unmuted';
+          myAudioButton.textContent = 'Audio On';
         } else {
-          myAudioButton.textContent = 'Muted'
+          myAudioButton.textContent = 'Audio Off'
         }
 
         remoteAudio.enabled = data.answerAudioEnabled;
         if (remoteAudio.enabled) {
-          remoteAudioButton.textContent = 'Unmuted';
+          remoteAudioButton.textContent = 'Audio On';
         } else {
-          remoteAudioButton.textContent = 'Muted'
+          remoteAudioButton.textContent = 'Audio Off'
         }
       }
     });
