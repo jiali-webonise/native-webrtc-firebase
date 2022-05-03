@@ -411,6 +411,8 @@ remoteAudioButton2.onclick = async () => {
 }
 
 updateAudioStatusBtn.onclick = async () => {
+  const connectionIdsArr = Array.from(connectionIds);
+  console.log('arr', connectionIdsArr);
   connectionIds.forEach(connectionId => {
     const roomId = map.get(connectionId);
     const roomDoc = firestore.collection('rooms').doc(roomId);
@@ -425,13 +427,24 @@ updateAudioStatusBtn.onclick = async () => {
         } else {
           myAudioButton.textContent = 'Audio Off'
         }
-
-        remoteAudio.enabled = data.offerAudioEnabled;
-        if (remoteAudio.enabled) {
-          remoteAudioButton.textContent = 'Audio On';
-        } else {
-          remoteAudioButton.textContent = 'Audio Off'
+        if (connectionId === connectionIdsArr[0]) {
+          remoteAudio.enabled = data.offerAudioEnabled;
+          if (remoteAudio.enabled) {
+            remoteAudioButton.textContent = 'Audio On';
+          } else {
+            remoteAudioButton.textContent = 'Audio Off'
+          }
         }
+
+        if (connectionId === connectionIdsArr[1]) {
+          remoteAudio2.enabled = data.offerAudioEnabled;
+          if (remoteAudio2.enabled) {
+            remoteAudioButton2.textContent = 'Audio On';
+          } else {
+            remoteAudioButton2.textContent = 'Audio Off'
+          }
+        }
+
       }
 
       if (role && role === ROLE.CALLER) {
@@ -441,12 +454,22 @@ updateAudioStatusBtn.onclick = async () => {
         } else {
           myAudioButton.textContent = 'Audio Off'
         }
+        if (connectionId === connectionIdsArr[0]) {
+          remoteAudio.enabled = data.offerAudioEnabled;
+          if (remoteAudio.enabled) {
+            remoteAudioButton.textContent = 'Audio On';
+          } else {
+            remoteAudioButton.textContent = 'Audio Off'
+          }
+        }
 
-        remoteAudio.enabled = data.answerAudioEnabled;
-        if (remoteAudio.enabled) {
-          remoteAudioButton.textContent = 'Audio On';
-        } else {
-          remoteAudioButton.textContent = 'Audio Off'
+        if (connectionId === connectionIdsArr[1]) {
+          remoteAudio2.enabled = data.offerAudioEnabled;
+          if (remoteAudio2.enabled) {
+            remoteAudioButton2.textContent = 'Audio On';
+          } else {
+            remoteAudioButton2.textContent = 'Audio Off'
+          }
         }
       }
     });
