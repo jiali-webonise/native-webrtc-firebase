@@ -35,9 +35,11 @@ const servers = {
 
 // Global State
 const pc = new RTCPeerConnection(servers);
+const newPc = new RTCPeerConnection(servers);
 const peers = [];
 const map = new Map();
 peers.push(pc);
+peers.push(newPc);
 let localStream = null;
 let remoteStream = null;
 let remoteStream2 = null;
@@ -79,31 +81,6 @@ const remoteAudioIdInput2 = document.getElementById('remoteAudioId2');
 
 //manger answer, patients call
 //Setup media sources for another rtc connection: multi-conn
-const anotherAnswer = async () => {
-  const newPc = new RTCPeerConnection(servers);
-  console.log("localStream", localStream)
-  localStream.getTracks().forEach((track) => {
-    newPc.addTrack(track, localStream);
-    // if (track.kind === 'audio') {
-    //   myAudio = track;
-    //   myAudioButton.disabled = false;
-    // }
-  });
-  peers.push(newPc);
-
-  newPc.ontrack = (event) => {
-    event.streams[0].getTracks().forEach((track) => {
-      remoteStream2.addTrack(track);
-      if (track.kind === 'audio') {
-        remoteAudio2 = track;
-        remoteAudioButton2.disabled = false;
-        remoteAudioIdInput2.value = remoteAudio2.id;
-        map.set(remoteAudio2.id, remoteAudio2);
-      }
-    });
-  };
-  remoteVideo2.srcObject = remoteStream2;
-}
 
 webcamButton.onclick = async () => {
   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -133,6 +110,30 @@ webcamButton.onclick = async () => {
       }
     });
   };
+
+
+  localStream.getTracks().forEach((track) => {
+    newPc.addTrack(track, localStream);
+    // if (track.kind === 'audio') {
+    //   myAudio = track;
+    //   myAudioButton.disabled = false;
+    // }
+  });
+
+  //create another rtcpeerconnection object
+  newPc.ontrack = (event) => {
+    event.streams[0].getTracks().forEach((track) => {
+      remoteStream2.addTrack(track);
+      if (track.kind === 'audio') {
+        remoteAudio2 = track;
+        remoteAudioButton2.disabled = false;
+        remoteAudioIdInput2.value = remoteAudio2.id;
+        map.set(remoteAudio2.id, remoteAudio2);
+      }
+    });
+  };
+  remoteVideo2.srcObject = remoteStream2;
+  // peers.push(newPc);
 
   webcamVideo.srcObject = localStream;
   remoteVideo.srcObject = remoteStream;
@@ -307,7 +308,8 @@ answerButton.onclick = async () => {
   map.set(callId, roomId);
 
   console.log("map", map)
-  console.log("connectionIds", connectionIds)
+  console.log("connectionIds", connectionIds);
+  console.log("peers", peers);
 
   const roomDoc = firestore.collection('rooms').doc(roomId);
   const callDoc = roomDoc.collection('calls').doc(callId);
@@ -316,8 +318,8 @@ answerButton.onclick = async () => {
   if (remoteStream.getTracks().length === 0) {
     await answerUpdate(peers[0], callDoc, answerCandidates, offerCandidates);
   } else {
-    await anotherAnswer();
-    await answerUpdate(peers[1], callDoc, answerCandidates, offerCandidates);
+    console.log("add new peer, peers", peers);
+    await answerUpdate(peers[1], callDoc, answerCandidates, offerCandidates);//newPc
   }
 
   updateAudioStatusBtn.disabled = false;
