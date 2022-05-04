@@ -413,12 +413,14 @@ remoteAudioButton2.onclick = async () => {
 updateAudioStatusBtn.onclick = async () => {
   const connectionIdsArr = Array.from(connectionIds);
   console.log('arr', connectionIdsArr);
+  console.log('connectionIds', connectionIds);
   connectionIds.forEach(connectionId => {
     const roomId = map.get(connectionId);
     const roomDoc = firestore.collection('rooms').doc(roomId);
     const callDoc = roomDoc.collection('calls').doc(connectionId);
     callDoc.onSnapshot((snapshot) => {
       const data = snapshot.data();
+      console.log('callDoc-data', data)
       //Listen for audio changes and update button text context accroding to db
       if (role && role === ROLE.RECEIVER) {
         myAudio.enabled = data.answerAudioEnabled;
@@ -447,6 +449,7 @@ updateAudioStatusBtn.onclick = async () => {
 
       }
 
+      //as a caller, only allows to call one person
       if (role && role === ROLE.CALLER) {
         myAudio.enabled = data.offerAudioEnabled;
         if (myAudio.enabled) {
@@ -454,23 +457,23 @@ updateAudioStatusBtn.onclick = async () => {
         } else {
           myAudioButton.textContent = 'Audio Off'
         }
-        if (connectionId === connectionIdsArr[0]) {
-          remoteAudio.enabled = data.offerAudioEnabled;
-          if (remoteAudio.enabled) {
-            remoteAudioButton.textContent = 'Audio On';
-          } else {
-            remoteAudioButton.textContent = 'Audio Off'
-          }
+        // if (connectionId === connectionIdsArr[0]) {
+        remoteAudio.enabled = data.answerAudioEnabled;
+        if (remoteAudio.enabled) {
+          remoteAudioButton.textContent = 'Audio On';
+        } else {
+          remoteAudioButton.textContent = 'Audio Off'
         }
+        // }
 
-        if (connectionId === connectionIdsArr[1]) {
-          remoteAudio2.enabled = data.offerAudioEnabled;
-          if (remoteAudio2.enabled) {
-            remoteAudioButton2.textContent = 'Audio On';
-          } else {
-            remoteAudioButton2.textContent = 'Audio Off'
-          }
-        }
+        // if (connectionId === connectionIdsArr[1]) {
+        // remoteAudio2.enabled = data.offerAudioEnabled;
+        // if (remoteAudio2.enabled) {
+        //   remoteAudioButton2.textContent = 'Audio On';
+        // } else {
+        //   remoteAudioButton2.textContent = 'Audio Off'
+        // }
+        // }
       }
     });
 
