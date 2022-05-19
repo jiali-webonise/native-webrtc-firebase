@@ -10,13 +10,12 @@ const ROLE = {
 
 const firebaseConfig = {
   // your config
-  apiKey: "AIzaSyC8MXXzAuAZJlHZSZpL9gvtgArXzwMp1cg",
-  authDomain: "webrtc-demo-84016.firebaseapp.com",
-  projectId: "webrtc-demo-84016",
-  storageBucket: "webrtc-demo-84016.appspot.com",
-  messagingSenderId: "743484605889",
-  appId: "1:743484605889:web:6d2239679dd56dddab1b40",
-  measurementId: "G-CCDYS8LG1Q"
+  apiKey: "AIzaSyASCrAynpEn2tnlmjyU5SQZoq7Wn7sxJYk",
+  authDomain: "webrtc-origin.firebaseapp.com",
+  projectId: "webrtc-origin",
+  storageBucket: "webrtc-origin.appspot.com",
+  messagingSenderId: "401870715926",
+  appId: "1:401870715926:web:f6a298e23fe838ca3ec937"
 };
 
 if (!firebase.apps.length) {
